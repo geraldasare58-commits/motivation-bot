@@ -1,15 +1,15 @@
 name: Run Motivation Bot
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 0,12 * * *' # Runs every day at 12:00 AM and 12:00 PM UTC
-  workflow_dispatch: # Lets you run it manually from GitHub anytime
+    - cron: '0 6,18 * * *' # Runs twice daily at 6:00 AM and 6:00 PM UTC
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -23,4 +23,4 @@ jobs:
       - name: Run script
         run: node bot.js
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
