@@ -2,100 +2,42 @@ import { GoogleGenAI } from '@google/genai';
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 
-// Automatically uses process.env.GEMINI_API_KEY
 const ai = new GoogleGenAI();
 
-async function generateQuote() {
-    console.log("Asking Gemini for a Christian motivational quote...");
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: "Generate a short, powerful Christian motivational quote and a matching Bible verse reference. Return it strictly as JSON with keys 'quote' and 'reference'."
-    });
+async function runBot() {
+  console.log("Generating motivation quote...");
 
-    let text = response.text.trim();
-    // Clean up markdown code blocks if the model wrapped the JSON in them
-    if (text.startsWith("```json")) {
-        text = text.replace(/^```json/, "").replace(/```$/, "").trim();
-    } else if (text.startsWith("```")) {
-        text = text.replace(/^```/, "").replace(/```$/, "").trim();
-    }
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: 'Provide a short, inspiring Christian motivational quote with a Bible verse reference.',
+  });
 
-    return JSON.parse(text);
-}
+  const quoteText = response.text;
+  console.log("Generated Quote:", quoteText);
 
-async function createQuoteCard(data) {
-    console.log("Rendering quote card image with Puppeteer...");
-    const htmlContent = `
-    <!DOCTYPE html>
+  // Launch Puppeteer to generate image
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1080, height: 1080 });
+
+  const htmlContent = `
     <html>
-    <head>
-        <style>
-            body {
-                width: 1080px;
-                height: 1080px;
-                margin: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background: linear-gradient(135deg, #1f1c2c, #928dab);
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                color: #ffffff;
-            }
-            .card {
-                width: 880px;
-                padding: 60px;
-                text-align: center;
-                background: rgba(0, 0, 0, 0.4);
-                border-radius: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-                border: 1px solid rgba(255,255,255,0.1);
-            }
-            .quote {
-                font-size: 48px;
-                line-height: 1.4;
-                margin-bottom: 30px;
-                font-weight: 400;
-            }
-            .reference {
-                font-size: 28px;
-                color: #ffd700;
-                letter-spacing: 2px;
-                text-transform: uppercase;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="card">
-            <div class="quote">"${data.quote}"</div>
-            <div class="reference">— ${data.reference}</div>
+      <body style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; text-align: center; padding: 40px;">
+        <div style="background: rgba(0,0,0,0.4); padding: 60px; border-radius: 20px; max-width: 800px;">
+          <h1 style="font-size: 42px; line-height: 1.4; margin-bottom: 30px;">"${quoteText}"</h1>
+          <p style="font-size: 24px; font-style: italic; opacity: 0.8;">#DailyMotivation #Faith</p>
         </div>
-    </body>
+      </body>
     </html>
-    `;
+  `;
 
-    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1080, height: 1080 });
-    await page.setContent(htmlContent);
-    
-    if (!fs.existsSync('output')) {
-        fs.mkdirSync('output');
-    }
-    
-    const filePath = `output/motivation-${Date.now()}.png`;
-    await page.screenshot({ path: filePath });
-    await browser.close();
-    console.log(`Quote card successfully saved to ${filePath}`);
+  await page.setContent(htmlContent);
+  await page.screenshot({ path: 'motivation.png' });
+  await browser.close();
+  console.log("Motivation image generated successfully!");
 }
 
-async function run() {
-    try {
-        const quoteData = await generateQuote();
-        await createQuoteCard(quoteData);
-    } catch (error) {
-        console.error("Error generating motivation bot content:", error);
-        process.exit(1);
-    }
-}
-
-run();
+runBot();
