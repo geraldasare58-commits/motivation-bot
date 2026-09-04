@@ -1,0 +1,13 @@
+{
+  "name": "motivation-bot",
+  "version": "1.0.0",
+  "description": "Automated faith-based quote card bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "openai": "^4.0.0",
+    "puppeteer": "^22.0.0"
+  }
+}
