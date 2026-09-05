@@ -1,9 +1,10 @@
-name: Run Motivation Bot
+name: Motivation Bot
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Runs daily at 08:00 UTC
-  workflow_dispatch: # Allows manual triggers from GitHub Actions UI
+    # Runs at 00:00 (12 AM) and 12:00 (12 PM) UTC every day
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Allows manual triggering anytime for testing
 
 jobs:
   run-bot:
@@ -17,6 +18,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -25,7 +27,8 @@ jobs:
         run: npx puppeteer browsers install chrome
 
       - name: Run bot script
-        run: node bot.js
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           MAKE_WEBHOOK_URL: ${{ secrets.MAKE_WEBHOOK_URL }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: node bot.js
