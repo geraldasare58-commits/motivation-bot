@@ -2,8 +2,8 @@ name: Run Motivation Bot
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Example daily trigger schedule
-  workflow_dispatch:
+    - cron: '0 8 * * *' # Runs daily at 08:00 UTC
+  workflow_dispatch: # Allows manual triggers from GitHub Actions UI
 
 jobs:
   run-bot:
